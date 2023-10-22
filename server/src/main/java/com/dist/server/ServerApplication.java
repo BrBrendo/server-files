@@ -18,6 +18,7 @@ package com.dist.server;
 
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 
@@ -28,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 public class ServerApplication{
 
@@ -85,11 +87,14 @@ public class ServerApplication{
 				}else if (request.equals("STORE_FILE_INFO")) {
 					// Lógica para armazenar informações sobre arquivos
 					String fileName = in.readUTF();
-					out.writeUTF(fileName); // Envia o nome do arquivo de volta para o cliente
-					String ipAddress = clientSocket.getInetAddress().getHostAddress(); // obtém o endereço IP do cliente
-					int port = clientSocket.getPort(); // obtém a porta do cliente
+					String ipAddress = clientSocket.getInetAddress().getHostAddress(); // obtém o endereço IP do client
+					int port = in.readShort(); // obtém a porta do cliente
 					storeFileInfo(fileName, ipAddress, port);
-				}
+				}else if (request.equals("REQUEST_FILE_INFO")) {
+				// Lógica para armazenar informações sobre arquivos
+					String fileName = "fileData.xml";
+					sendFile(fileName, out);
+			}
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -98,10 +103,28 @@ public class ServerApplication{
 
 
 		private void storeFileInfo(String fileName, String ipAddress, int port) {
-			// Salvar no arquivo físico
 			try {
-				Element root = new Element("fileData");
-				Document doc = new Document(root);
+				File file = new File(FILE_STORAGE_PATH + "fileData.xml");
+				Element root;
+				Document doc;
+				if (file.exists()) {
+					SAXBuilder saxBuilder = new SAXBuilder();
+					doc = saxBuilder.build(file);
+					root = doc.getRootElement();
+				} else {
+					root = new Element("fileData");
+					doc = new Document(root);
+				}
+
+				List<Element> fileList = root.getChildren("file");
+				for (Element fileElement : fileList) {
+					String existingFileName = fileElement.getChildText("fileName");
+					String existingIpAddress = fileElement.getChildText("ipAddress");
+					if (existingFileName.equals(fileName) && existingIpAddress.equals(ipAddress)) {
+						System.out.println("A entrada para o arquivo " + fileName + " e endereço IP " + ipAddress + " já existe.");
+						return; // Não adicione uma nova entrada se já existir
+					}
+				}
 
 				Element fileElement = new Element("file");
 				fileElement.addContent(new Element("fileName").setText(fileName));
@@ -111,7 +134,7 @@ public class ServerApplication{
 
 				XMLOutputter xmlOutput = new XMLOutputter();
 				xmlOutput.setFormat(Format.getPrettyFormat());
-				xmlOutput.output(doc, new FileWriter(FILE_STORAGE_PATH + "fileData.xml"));
+				xmlOutput.output(doc, new FileWriter(file));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
