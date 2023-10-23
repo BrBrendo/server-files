@@ -27,18 +27,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
 public class ServerApplication{
 
 	/*D:\ServerFiles*/
-	private static final int PORT = 12345; // escolha a porta de operação/escuta do servidor.
-	// Local da pasta onde o servidor salvará os arquivos.
+	private static final int PORT = 12345;
 
-	private static final Map<String, String> fileData = new HashMap<>();
-	private static final String FILE_STORAGE_PATH = "C:\\server/"; //subistitua o local para o servidor salvar os arquivos.
+	private static final String FILE_STORAGE_PATH = "C:\\server/";
 
 	public static void main(String[] args) {
 		try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -51,17 +47,17 @@ public class ServerApplication{
 
 			while (true) {
 				Socket clientSocket = serverSocket.accept();
-				new ClientHandler(clientSocket).start();
+				new ClientConnection(clientSocket).start();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	static class ClientHandler extends Thread {
+	static class ClientConnection extends Thread {
 		private final Socket clientSocket;
 
-		public ClientHandler(Socket socket) {
+		public ClientConnection(Socket socket) {
 			this.clientSocket = socket;
 		}
 
@@ -73,17 +69,14 @@ public class ServerApplication{
 				String request = in.readUTF();
 
 				if (request.equals("UPLOAD")) {
-					// Cliente está enviando um arquivo
+					// Cliente envia um arquivo
 					String fileName = in.readUTF();
 					saveFile(fileName, in);
 					System.out.println("Arquivo " + fileName + " foi recebido com sucesso no servidor.");
 				} else if (request.equals("DOWNLOAD")) {
-					// Cliente está solicitando um arquivo
+					// Cliente requisita um arquivo
 					String fileName = in.readUTF();
 					sendFile(fileName, out);
-				} else if (request.equals("LISTAR")) {
-					// Cliente está solicitando a lista de arquivos disponíveis
-					listarArquivos(out);
 				}else if (request.equals("STORE_FILE_INFO")) {
 					// Lógica para armazenar informações sobre arquivos
 					String fileName = in.readUTF();
@@ -140,20 +133,6 @@ public class ServerApplication{
 			}
 		}
 
-
-
-		private void listarArquivos(DataOutputStream out) throws IOException {
-			File[] files = new File(FILE_STORAGE_PATH).listFiles();
-			if (files != null) {
-				StringBuilder fileList = new StringBuilder();
-				for (File file : files) {
-					fileList.append(file.getName()).append("\n");
-				}
-				out.writeUTF(fileList.toString());
-			} else {
-				out.writeUTF("Nenhum arquivo disponível no servidor.");
-			}
-		}
 
 		private void saveFile(String fileName, DataInputStream in) throws IOException {
 			Path filePath = Path.of(FILE_STORAGE_PATH + fileName);
