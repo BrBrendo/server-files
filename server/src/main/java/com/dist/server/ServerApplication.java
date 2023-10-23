@@ -38,7 +38,7 @@ public class ServerApplication{
 	// Local da pasta onde o servidor salvará os arquivos.
 
 	private static final Map<String, String> fileData = new HashMap<>();
-	private static final String FILE_STORAGE_PATH = "C:\\dist/"; //subistitua o local para o servidor salvar os arquivos.
+	private static final String FILE_STORAGE_PATH = "C:\\server/"; //subistitua o local para o servidor salvar os arquivos.
 
 	public static void main(String[] args) {
 		try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -178,6 +178,8 @@ public class ServerApplication{
 				out.writeBoolean(false); // Indica que o arquivo não existe
 			}
 		}
+
+
 
 		//here
 	}
