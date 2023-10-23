@@ -78,11 +78,13 @@ public class ServerApplication{
 					String fileName = in.readUTF();
 					sendFile(fileName, out);
 				}else if (request.equals("STORE_FILE_INFO")) {
-					// Lógica para armazenar informações sobre arquivos
-					String fileName = in.readUTF();
-					String ipAddress = clientSocket.getInetAddress().getHostAddress(); // obtém o endereço IP do client
-					int port = in.readShort(); // obtém a porta do cliente
-					storeFileInfo(fileName, ipAddress, port);
+					int numFiles = in.readInt(); // Lê o número de arquivos que serão enviados
+					for (int i = 0; i < numFiles; i++) {
+						String fileName = in.readUTF(); // Lê cada nome de arquivo da lista
+						String ipAddress = clientSocket.getInetAddress().getHostAddress(); // Obtém o endereço IP do cliente
+						int port = in.readShort(); // Obtém a porta do cliente
+						storeFileInfo(fileName, ipAddress, port); // Chama o método para armazenar as informações do arquivo
+					}
 				}else if (request.equals("REQUEST_FILE_INFO")) {
 				// Lógica para armazenar informações sobre arquivos
 					String fileName = "fileData.xml";
